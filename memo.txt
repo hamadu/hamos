@@ -31,4 +31,10 @@ tab-separated である必要がある。
 
 https://os.phil-opp.com/entering-longmode/
 
-## 
+# Set Up Rust
+
+https://os.phil-opp.com/set-up-rust/
+
+## xargoでcoreのビルドが失敗する
+
+https://github.com/phil-opp/blog_os/issues/379
