@@ -1,0 +1,7 @@
+[package]
+name = "hamos"
+version = "0.1.0"
+authors = ["hamadu <dercll1020@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]

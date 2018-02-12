@@ -1,0 +1,34 @@
+https://os.phil-opp.com/multiboot-kernel/
+
+# クロスコンパイル環境
+
+## tap
+
+$ brew tap hamadu/homebrew-x86_64-pc-elf
+$ brew tap hamadu/homebrew-grub
+
+## install
+
+$ # 時間がかかるぞ
+$ brew install nasm qemu
+$ brew install x86_64-pc-elf-gcc
+$ brew install --with-x86_64-pc-elf --HEAD --without-test grub
+$ brew install make
+
+# A minimal x86 kernel
+
+https://os.phil-opp.com/multiboot-kernel/
+
+## リンカ
+
+複数のオブジェクトファイル(処理系特有の中間言語)を一つのオブジェクトファイルにまとめる作業。オブジェクトファイルは複数のセクションから成る。.ld にはどのセクションをどこに配置するかを書く。オブジェクトファイルにはラベルを付加できて、参照することができる。
+
+## Makefile
+
+tab-separated である必要がある。
+
+# Entering Long Mode
+
+https://os.phil-opp.com/entering-longmode/
+
+## 
