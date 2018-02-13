@@ -1,6 +1,7 @@
 use core::ptr::Unique;
 use core::fmt;
 use volatile::Volatile;
+use spin::Mutex;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
@@ -66,6 +67,25 @@ impl Writer {
   }
 
   fn new_line(&mut self) {
+    for row in 1..BUFFER_HEIGHT {
+      for col in 0..BUFFER_WIDTH {
+        let buffer = self.buffer();
+        let chara = buffer.chars[row][col].read();
+        buffer.chars[row-1][col].write(chara);
+      }
+    }
+    self.clear_row(BUFFER_HEIGHT-1);
+    self.column_position = 0;
+  }
+
+  fn clear_row(&mut self, row: usize) {
+    let blank = ScreenChar {
+      ascii_character: b' ',
+      color_code: self.color_code,
+    };
+    for col in 0..BUFFER_WIDTH {
+      self.buffer().chars[row][col].write(blank);
+    }
   }
 }
 
@@ -78,18 +98,11 @@ impl fmt::Write for Writer {
   }
 }
 
-pub fn print_some() {
-  use core::fmt::Write;
-  let mut writer = Writer {
-      column_position: 0,
-      color_code: ColorCode::new(Color::Blue, Color::LightRed),
-      buffer: unsafe { Unique::new_unchecked(0xb8000 as *mut _) }
-  };
-  writer.write_str("armonagkubterbedrgen");
-  write!(writer, "Home: {}-{}", 33, 4);
-}
-
-
+pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
+  column_position: 0,
+  color_code: ColorCode::new(Color::LightGreen, Color::Black),
+  buffer: unsafe { Unique::new_unchecked(0xb8000 as *mut _) }
+});
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]

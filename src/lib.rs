@@ -5,25 +5,18 @@
 
 extern crate rlibc;
 extern crate volatile;
+extern crate spin;
 
 mod vga_buffer;
-use vga_buffer::print_some;
 
 #[no_mangle]
 pub extern fn rust_main() -> ! {
-    let helloworld = b"Hello World!";
-    let color_byte = 0x1f;
-    let mut colored_world = [color_byte; 24];
-    for (i, char_byte) in helloworld.into_iter().enumerate() {
-        colored_world[i*2] = *char_byte;
-    }
+  use core::fmt::Write;
 
-    let buffer_ptr = (0xb8000 + 1988) as *mut _;
-    unsafe { *buffer_ptr = colored_world };
+  vga_buffer::WRITER.lock().write_str("Hello!\nHello!!\nHello!!!");
+  write!(vga_buffer::WRITER.lock(), "Home: {}-{}", 33, 4);
 
-    print_some();
-
-    loop {}
+  loop {}
 }
 
 #[lang = "eh_personality"]
@@ -33,5 +26,5 @@ pub extern fn eh_personality() {}
 #[lang = "panic_fmt"]
 #[no_mangle]
 pub extern fn panic_fmt() -> ! {
-    loop {}
+  loop {}
 }
