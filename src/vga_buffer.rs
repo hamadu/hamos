@@ -3,6 +3,17 @@ use core::fmt;
 use volatile::Volatile;
 use spin::Mutex;
 
+macro_rules! println {
+  ($fmt:expr) => (print!(concat!($fmt, "\n")));
+  ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+}
+
+macro_rules! print {
+  ($($arg:tt)*) => ({
+    $crate::vga_buffer::print(format_args!($($arg)*));
+  });
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -103,6 +114,17 @@ pub static WRITER: Mutex<Writer> = Mutex::new(Writer {
   color_code: ColorCode::new(Color::LightGreen, Color::Black),
   buffer: unsafe { Unique::new_unchecked(0xb8000 as *mut _) }
 });
+
+pub fn clear_screen() {
+  for _ in 0..BUFFER_HEIGHT {
+    println!("");
+  }
+}
+
+pub fn print(args: fmt::Arguments) {
+  use core::fmt::Write;
+  WRITER.lock().write_fmt(args).unwrap();
+}
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]

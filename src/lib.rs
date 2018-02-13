@@ -7,15 +7,13 @@ extern crate rlibc;
 extern crate volatile;
 extern crate spin;
 
+#[macro_use]
 mod vga_buffer;
 
 #[no_mangle]
 pub extern fn rust_main() -> ! {
-  use core::fmt::Write;
-
-  vga_buffer::WRITER.lock().write_str("Hello!\nHello!!\nHello!!!");
-  write!(vga_buffer::WRITER.lock(), "Home: {}-{}", 33, 4);
-
+  vga_buffer::clear_screen();
+  println!("{}", { println!("inner"); "outer" });
   loop {}
 }
 
