@@ -18,7 +18,7 @@ mod vga_buffer;
 mod memory;
 
 #[no_mangle]
-pub extern fn rust_main(multiboot_information_address: usize) -> ! {
+pub extern "C" fn rust_main(multiboot_information_address: usize) -> ! {
   use memory::FrameAllocator;
 
   let boot_info = unsafe { multiboot2::load(multiboot_information_address) };
@@ -49,17 +49,11 @@ pub extern fn rust_main(multiboot_information_address: usize) -> ! {
     multiboot_start, multiboot_end, 
     memory_map_tag.memory_areas()
   );
-  
-  memory::test_paging(&mut frame_allocator);
 
-
-  // for i in 0.. {
-  //     if let None = frame_allocator.allocate_frame() {
-  //         println!("allocated {} frames", i);
-  //         break;
-  //     }
-  // }
-
+  enable_nxe_bit();
+  enable_write_protect_bit();
+  memory::remap_the_kernel(&mut frame_allocator, boot_info);
+  println!("OK");
 
   loop {}
 }
@@ -74,4 +68,18 @@ pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32
   println!("HAMOOOOOON:\nF:{}\nL:{}", file, line);
   println!("{}", fmt);
   loop {}
+}
+
+fn enable_nxe_bit() {
+  use x86_64::registers::msr::{IA32_EFER, rdmsr, wrmsr};
+  let nxe_bit = 1 << 11;
+  unsafe {
+    let efer = rdmsr(IA32_EFER);
+    wrmsr(IA32_EFER, efer | nxe_bit);
+  }
+}
+
+fn enable_write_protect_bit() {
+  use x86_64::registers::control_regs::{cr0, cr0_write, Cr0};
+  unsafe { cr0_write(cr0() | Cr0::WRITE_PROTECT) };
 }
