@@ -1,15 +1,16 @@
 [package]
+authors = ["hamadu <dercll1020@gmail.com>"]
 name = "hamos"
 version = "0.1.0"
-authors = ["hamadu <dercll1020@gmail.com>"]
+
+[dependencies]
+bitflags = "0.9.1"
+multiboot2 = "0.1.0"
+once = "0.3.3"
+rlibc = "1.0"
+spin = "0.4.5"
+volatile = "0.1.0"
+x86_64 = "0.1.2"
 
 [lib]
 crate-type = ["staticlib"]
-
-[dependencies]
-rlibc = "1.0"
-volatile = "0.1.0"
-spin = "0.4.5"
-multiboot2 = "0.1.0"
-bitflags = "0.9.1"
-x86_64 = "0.1.2"

@@ -1,10 +1,13 @@
+use multiboot2::BootInformation;
 pub use self::area_frame_allocator::AreaFrameAllocator;
+pub use self::heap_allocator::BumpAllocator;
 pub use self::paging::test_paging;
 pub use self::paging::remap_the_kernel;
 use self::paging::PhysicalAddress;
 use self::paging::VirtualAddress;
 
 mod area_frame_allocator;
+mod heap_allocator;
 mod paging;
 
 pub const PAGE_SIZE: usize = 4096;
@@ -57,4 +60,33 @@ impl Iterator for FrameIter {
 pub trait FrameAllocator {
     fn allocate_frame(&mut self) -> Option<Frame>;
     fn deallocate_frame(&mut self, frame: Frame);
+}
+
+pub fn init(boot_info: &BootInformation) {
+    assert_has_not_been_called!("memory::init must be called only once");
+
+    let memory_map_tag = boot_info.memory_map_tag().expect(
+        "Memory map tag required");
+    let elf_sections_tag = boot_info.elf_sections_tag().expect(
+        "Elf sections tag required");
+
+    let kernel_start = elf_sections_tag.sections()
+        .filter(|s| s.is_allocated()).map(|s| s.addr).min().unwrap();
+    let kernel_end = elf_sections_tag.sections()
+        .filter(|s| s.is_allocated()).map(|s| s.addr + s.size).max()
+        .unwrap();
+
+    println!("kernel start: {:#x}, kernel end: {:#x}",
+             kernel_start,
+             kernel_end);
+    println!("multiboot start: {:#x}, multiboot end: {:#x}",
+             boot_info.start_address(),
+             boot_info.end_address());
+
+    let mut frame_allocator = AreaFrameAllocator::new(
+        kernel_start as usize, kernel_end as usize,
+        boot_info.start_address(), boot_info.end_address(),
+        memory_map_tag.memory_areas());
+
+    paging::remap_the_kernel(&mut frame_allocator, boot_info);
 }

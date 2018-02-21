@@ -74,10 +74,10 @@ impl ActivePageTable {
         ActivePageTable { mapper: Mapper::new() }
     }
 
-    pub fn with<F>(
+  pub fn with<F>(
         &mut self,
-        table: &mut InactivePageTable,
-        temporary_page: &mut temporary_page::TemporaryPage, // new
+        inactive_table: &mut InactivePageTable,
+        temporary_page: &mut temporary_page::TemporaryPage,
         f: F,
     ) where
         F: FnOnce(&mut Mapper),
@@ -92,7 +92,7 @@ impl ActivePageTable {
             let p4_table = temporary_page.map_table_frame(backup.clone(), self);
 
             // overwrite recursive mapping
-            self.p4_mut()[511].set(table.p4_frame.clone(), PRESENT | WRITABLE);
+            self.p4_mut()[511].set(inactive_table.p4_frame.clone(), PRESENT | WRITABLE);
             tlb::flush_all();
 
             // execute f in the new context
