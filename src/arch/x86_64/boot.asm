@@ -1,5 +1,5 @@
-extern long_mode_start
 global start
+extern long_mode_start
 
 section .text
 bits 32
@@ -12,16 +12,20 @@ start:
   call check_long_mode
 
   call set_up_page_tables
-  mov eax, p4_table
-  or eax, 0x11
-  mov [p4_table + 511 * 8], eax
-
   call enable_paging
 
   lgdt [gdt64.pointer]
   jmp gdt64.code:long_mode_start
 
+  ; print `OK` to screen
+  ;mov dword [0xb8000], 0x2f4b2f4f
+  hlt
+
 set_up_page_tables:
+  mov eax, p4_table
+  or eax, 0b11
+  mov [p4_table + 511 * 8], eax
+
   mov eax, p3_table
   or eax, 0b11
   mov [p4_table], eax
@@ -31,6 +35,7 @@ set_up_page_tables:
   mov [p3_table], eax
 
   mov ecx, 0
+
 .map_p2_table:
   ; map ecx-th P2 entry to a huge page that starts at address 2MiB*ecx
   mov eax, 0x200000  ; 2MiB
