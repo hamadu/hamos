@@ -5,6 +5,7 @@ use self::temporary_page::TemporaryPage;
 use memory::{PAGE_SIZE, Frame, FrameAllocator};
 use multiboot2::BootInformation;
 use core::ptr::Unique;
+use core::ops::Add;
 use core::ops::{Deref, DerefMut};
 
 mod entry;
@@ -22,6 +23,16 @@ pub struct Page {
     number: usize,
 }
 
+impl Add<usize> for Page {
+    type Output = Page;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        Page { number: self.number + rhs }
+    }
+}
+
+
+#[derive(Clone)]
 pub struct PageIter {
     start: Page,
     end: Page,
@@ -51,7 +62,7 @@ impl Page {
         Page { number: address / PAGE_SIZE }
     }
 
-    fn start_address(&self) -> usize {
+    pub fn start_address(&self) -> usize {
         self.number * PAGE_SIZE
     }
 

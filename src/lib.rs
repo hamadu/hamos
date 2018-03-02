@@ -5,6 +5,7 @@
 #![feature(allocator_api)]
 #![feature(global_allocator)]
 #![feature(const_unique_new, const_atomic_usize_new)]
+#![feature(abi_x86_interrupt)]
 #![no_std]
 
 #[macro_use]
@@ -15,6 +16,7 @@ extern crate volatile;
 extern crate spin;
 extern crate multiboot2;
 extern crate x86_64;
+extern crate bit_field;
 
 #[macro_use]
 extern crate bitflags;
@@ -23,9 +25,14 @@ extern crate bitflags;
 extern crate once;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 mod vga_buffer;
 
 mod memory;
+mod interrupts;
+
 use memory::BumpAllocator;
 
 #[no_mangle]
@@ -36,7 +43,7 @@ pub extern "C" fn rust_main(multiboot_information_address: usize) -> ! {
     enable_nxe_bit();
     enable_write_protect_bit();
 
-    memory::init(boot_info);
+    let mut memory_controller = memory::init(boot_info);
 
     use alloc::boxed::Box;
     let mut heap_test = Box::new(42);
@@ -50,6 +57,22 @@ pub extern "C" fn rust_main(multiboot_information_address: usize) -> ! {
         print!("{} ", i);
     }
     println!("heap allocated.");
+
+    interrupts::init(&mut memory_controller);
+    // x86_64::instructions::interrupts::int3();
+
+    // unsafe {
+    //     *(0xdeadbeaf as *mut u64) = 42;
+    // };
+
+    fn stack_overflow() {
+        stack_overflow(); // for each recursion, the return address is pushed
+    }
+
+    // trigger a stack overflow
+    stack_overflow();
+
+    println!("OK");
 
     loop {}
 }
